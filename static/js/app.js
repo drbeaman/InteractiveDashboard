@@ -4,19 +4,23 @@ function buildMetadata(sample) {
 
   // Use `d3.json` to fetch the metadata for a sample
     // Use d3 to select the panel with id of `#sample-metadata`
-  var url = `metadata/${sample}`;
+  var url = `/metadata/${sample}`;
 
-  d3.json(url).then(function(sample){
+  d3.json(url).then(function(sampleMD){
     var sample_metadata = d3.select('#sample-metadata');
+    console.log(sampleMD);
     // Use `.html("") to clear any existing metadata
     sample_metadata.html('');
     // Use `Object.entries` to add each key and value pair to the panel
     // Hint: Inside the loop, you will need to use d3 to append new
     // tags for each key-value in the metadata.
-    [Object.entries(forEach(function([key, value]) {
-      sample_metadata.append('p').text(`{$key}, {$value}`)
-      // console.log(sample_metadata);
-    }))]
+    Object.entries(sampleMD).forEach( entry => {
+      let key = entry[0];
+      let value = entry[1];
+      var row = sample_metadata.append("p");
+      row.text(`${key}: ${value}`);
+    })
+      
   });
     // BONUS: Build the Gauge Chart
     // buildGauge(data.WFREQ);
@@ -25,12 +29,53 @@ function buildMetadata(sample) {
 function buildCharts(sample) {
 
   // @TODO: Use `d3.json` to fetch the sample data for the plots
+  var url = `/samples/${sample}`;
+  d3.json(url).then(function(data) {
 
     // @TODO: Build a Bubble Chart using the sample data
+    var x_values = data.otu_ids;
+    var y_values = data.sample_values;
+    var marker_size = data.sample_values;
+    var marker_colors = data.otu_ids; 
+    var text_values = data.otu_labels;
+    
+    var trace1 = {
+      x: x_values,
+      y: y_values,
+      text: text_values,
+      mode: 'markers',
+      marker: {
+        color: marker_colors,
+        size: marker_size
+      } 
+    };
 
+    var data = [trace1];
+
+    var layout = {
+      xaxis: { title: "OTU ID"},
+    };
+
+    Plotly.newPlot('bubble', data, layout);
     // @TODO: Build a Pie Chart
     // HINT: You will need to use slice() to grab the top 10 sample_values,
     // otu_ids, and labels (10 each).
+  d3.json(url).then(function(data) {  
+    var pie_values = data.sample_values.slice(0,10);
+    var pie_labels = data.otu_ids.slice(0,10);
+    var hover_text = data.otu_labels.slice(0,10);
+
+    var data = [{
+      values: pie_values,
+      labels: pie_labels,
+      hovertext: hover_text,
+      hoverinfo: hover_text,
+      type: 'pie'
+    }];
+    
+    Plotly.newPlot('pie', data);
+  });
+});
 }
 
 function init() {
